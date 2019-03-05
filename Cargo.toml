@@ -5,3 +5,4 @@ authors = ["anuj"]
 edition = "2018"
 
 [dependencies]
+neovim-lib = "0.6.0"
