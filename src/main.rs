@@ -16,12 +16,6 @@ fn quit_example() {
 fn attach_to_nvim(nvim: &mut Neovim) -> (neovim_lib::neovim_api::Buffer) {
     //https://github.com/boxofrox/neovim-scorched-earth/blob/master/src/main.rs
     nvim.command("echom \"rust client connected to neovim\"").unwrap();
-    nvim.subscribe("cursor-moved-i").expect("error: cannot subscribe to event: change-cursor-i");
-    nvim.subscribe("insert-enter").expect("error: cannot subscribe to event: insert-enter");
-    nvim.subscribe("insert-leave").expect("error: cannot subscribe to event: insert-leave");
-    nvim.subscribe("quit").expect("error: cannot subscribe to event: quit");
-
-
     let buffer = nvim.get_current_buf().unwrap();
     buffer
         .set_lines(
@@ -30,7 +24,7 @@ fn attach_to_nvim(nvim: &mut Neovim) -> (neovim_lib::neovim_api::Buffer) {
             1,
             true,
             vec![String::from("foo"), String::from("hey rust")],
-        )
+            )
         .unwrap();
 
     buffer.attach(nvim, true, Vec::new()).unwrap();
@@ -52,8 +46,18 @@ fn notify_blocking_example() {
     println!("Starting blocking event loop");
     loop {
         match writer.recv() {
-            Ok(s) => {
-                println!("We did it! Got {:?} Setting linesin read buf", s);
+            Ok((event_type, v)) => {
+                match v.as_slice() {
+                    [_, tick, line_start, line_end, lines, _] => {
+                        println!("tick: {:?}", tick.as_u64().unwrap());
+                        println!("line_start: {:?}", line_start.as_u64());
+                        println!("line_end: {:?}", line_end.as_u64());
+                        let data = lines.as_array().unwrap();
+                        let data_parsed : Vec<&str>= data.iter().map(|s| s.as_str().unwrap()).collect();
+                        println!("data_parsed: {:?}", data_parsed);
+                    },
+                    _ => println!("hil"),
+                }
                 read_buf
                     .set_lines(
                         &mut nvim,
@@ -61,7 +65,7 @@ fn notify_blocking_example() {
                         1,
                         true,
                         vec![String::from("foo"), String::from("hey rust")],
-                    )
+                        )
                     .unwrap();
             }
             Err(e) => println!("Got an error!: {:?}", e),
