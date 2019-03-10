@@ -1,37 +1,12 @@
 use neovim_lib::{Neovim, NeovimApi, Session};
-use neovim_lib::{Handler, Value};
-use neovim_lib::neovim;
+use neovim_lib::{Value};
 use neovim_lib::neovim_api::Buffer;
-use std::sync::mpsc;
-
-#[allow(dead_code)]
-fn quit_example() {
-    let mut session = Session::new_tcp("127.0.0.1:6666").unwrap();
-    session.start_event_loop();
-    let mut nvim = Neovim::new(session);
-    match nvim.quit_no_save() {
-        Ok(()) => println!("quit success!"),
-        Err(msg) => println!("error! {:?}", msg)
-    }
-}
 
 fn attach_to_nvim(nvim: &mut Neovim) -> Buffer {
-    //https://github.com/boxofrox/neovim-scorched-earth/blob/master/src/main.rs
-    nvim.command("echom \"rust client connected to neovim\"")
-        .expect("Unable to connect to neovim instance");
-
     let buffer = nvim.get_current_buf().unwrap();
-    buffer
-        .set_lines(
-            nvim,
-            0,
-            1,
-            true,
-            vec![String::from("foo"), String::from("hey rust")],
-            )
-        .unwrap();
-
     buffer.attach(nvim, true, Vec::new()).unwrap();
+    nvim.command("echom \"Buffer attached to apedocs server\"")
+        .expect("Unable to connect to neovim instance");
     return buffer;
 }
 
@@ -102,7 +77,7 @@ fn notify_blocking_example() {
             Ok((event_type, v)) => {
                 match parse_nvim_buf_lines_event(&v) {
                     Ok(buf_event) => {
-                        println!("Got event: {:?}", buf_event);
+                        println!("Event {:?}: {:?}", event_type, buf_event);
                         send_events_to_buffer(&mut nvim, &read_user_buf, buf_event);
                     }
                     Err(s) => { println!("Error: {:?}", s); }
