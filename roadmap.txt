@@ -1,0 +1,7 @@
+ToDo:
+- Explore NAT Hole Punching with crust
+- Add collaborative editing on both sides
+- Terminal mode
+
+Edge Cases:
+- Infinite message loop caused by vim plugins that modify text
